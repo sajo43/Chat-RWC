@@ -1,0 +1,1013 @@
+<html><head><base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .chat-container {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #dee2e6;
+            float: left;
+            height: 600px;
+        }
+
+        .chat-area {
+            margin-left: 300px;
+            padding: 20px;
+            height: 600px;
+            position: relative;
+        }
+
+        .messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #fff;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .message.sent {
+            background: #0084ff;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.received {
+            background: #e9ecef;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #0084ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background: #0073e6;
+        }
+
+        .contact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contact {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+
+        .contact:hover {
+            background: #f1f3f5;
+        }
+
+        .delete-contact {
+            color: red;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        #userNumber {
+            font-size: 14px;
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .message-input {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input input {
+            flex-grow: 1;
+        }
+
+        .message-input button {
+            width: auto;
+        }
+
+        .dev-button {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            opacity: 0.5;
+            background: #666;
+            width: auto;
+            padding: 5px 10px;
+        }
+
+        .dev-area {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .dev-area table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        .dev-area th, .dev-area td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .dev-area th {
+            background: #f5f5f5;
+        }
+
+        .back-button {
+            background: #666;
+            width: auto;
+            padding: 5px 15px;
+            margin-bottom: 20px;
+        }
+        
+        .social-button {
+            background: #4CAF50;
+            margin-top: 10px;
+        }
+
+        .social-container {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .timeline {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .post {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+
+        .post-content img {
+            max-width: 100%;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .profile-section {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .profile-section .profile-pic {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+        }
+
+        .post-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .verified-badge {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #1DA1F2;
+            border-radius: 50%;
+            margin-left: 5px;
+            position: relative;
+        }
+
+        .verified-badge::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .follow-button {
+            background: #1DA1F2;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 10px 0;
+            width: auto;
+            cursor: pointer;
+        }
+
+        .follow-button.following {
+            background: #E1E8ED;
+            color: #657786;
+            cursor: default;
+        }
+
+        .follow-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-count {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .stat-label {
+            color: #657786;
+            font-size: 12px;
+        }
+        
+        .modal-profile {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-profile .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none; 
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 15px;
+            color: #666;
+            width: auto;
+        }
+
+        .modal-profile .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-profile .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        .modal-profile .profile-posts {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .modal-profile .profile-name {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="authSection" class="auth-container">
+            <h2>Chat Application</h2>
+            <div id="registerForm">
+                <h3>Register</h3>
+                <input type="text" id="regName" placeholder="Name">
+                <input type="password" id="regPassword" placeholder="Password">
+                <button onclick="register()">Register</button>
+                <p>Already have an account? <a href="javascript:void(0)" onclick="toggleForms()">Login</a></p>
+            </div>
+            <div id="loginForm" style="display: none;">
+                <h3>Login</h3>
+                <input type="text" id="loginNumber" placeholder="Your Number">
+                <input type="password" id="loginPassword" placeholder="Password">
+                <button onclick="login()">Login</button>
+                <p>Don&apos;t have an account? <a href="javascript:void(0)" onclick="toggleForms()">Register</a></p>
+            </div>
+        </div>
+
+        <div id="chatSection" class="chat-container">
+            <div class="sidebar">
+                <h3>Your Profile</h3>
+                <p id="userNumber"></p>
+                <div class="add-contact">
+                    <input type="text" id="contactNumber" placeholder="Enter 6-digit number">
+                    <button onclick="addContact()">Add Contact</button>
+                </div>
+                <button onclick="openSocialArea()" class="social-button">Mini Rede Social</button>
+                <div id="contactsList"></div>
+            </div>
+            <div class="chat-area">
+                <div id="messages" class="messages"></div>
+                <div class="message-input">
+                    <input type="text" id="messageInput" placeholder="Type a message...">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="socialSection" class="social-container">
+            <button onclick="backToChat()" class="back-button">Back to Chat</button>
+            <div class="profile-section">
+                <img id="userProfilePic" src="https://via.placeholder.com/120" class="profile-pic">
+                <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById(&apos;profilePicInput&apos;).click()">Change Profile Picture</button>
+                <input type="text" id="profileName" placeholder="Set your display name">
+                <button onclick="updateProfile()">Update Profile</button>
+            </div>
+            
+            <div class="post-form">
+                <textarea id="postText" placeholder="What&apos;s on your mind?" rows="3" style="width: 100%; margin-bottom: 10px;"></textarea>
+                <input type="file" id="postImage" accept="image/*">
+                <button onclick="createPost()">Post</button>
+            </div>
+            
+            <div id="timeline" class="timeline"></div>
+        </div>
+    </div>
+
+    <button id="devButton" class="dev-button">&#xc1;rea do Desenvolvedor</button>
+
+    <div id="devArea" class="dev-area">
+        <button onclick="backToMain()" class="back-button">Voltar</button>
+        <h2>&#xc1;rea do Desenvolvedor</h2>
+        
+        <h3>Registro de Logins</h3>
+        <div id="loginLogs"></div>
+
+        <h3>Contas Criadas</h3>
+        <div id="accountsList"></div>
+
+        <h3>Ferramentas Administrativas</h3>
+        <div id="adminTools">
+            <input type="text" id="accountNumberInput" placeholder="N&#xfa;mero da conta">
+            <button onclick="viewAccountInfo()">Ver Informa&#xe7;&#xf5;es</button>
+            <button onclick="banAccount()">Banir Conta</button>
+        </div>
+        
+        <div id="accountDetails"></div>
+    </div>
+
+    <script>if (!localStorage.getItem('users')) {}
+if (!localStorage.getItem('messages')) {}
+let currentUser = null;
+let currentChat = null;
+let loginHistory = JSON.parse(localStorage.getItem('loginHistory') || '[]');
+let bannedAccounts = JSON.parse(localStorage.getItem('bannedAccounts') || '[]');
+let posts = JSON.parse(localStorage.getItem('posts') || '[]');
+let userProfiles = JSON.parse(localStorage.getItem('userProfiles') || '{}');
+let followData = JSON.parse(localStorage.getItem('followData') || '{}');
+let verifiedAccounts = JSON.parse(localStorage.getItem('verifiedAccounts') || '[]');
+function generateUniqueNumber() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+function register() {
+  const name = document.getElementById('regName').value;
+  const password = document.getElementById('regPassword').value;
+  if (!name || !password) {
+    alert('Please fill in all fields');
+    return;
+  }
+  const users = JSON.parse(localStorage.getItem('users'));
+  const uniqueNumber = generateUniqueNumber();
+  users[uniqueNumber] = {
+    name: name,
+    password: CryptoJS.SHA256(password).toString(),
+    contacts: []
+  };
+  localStorage.setItem('users', JSON.stringify(users));
+  alert(`Registration successful! Your number is: ${uniqueNumber}`);
+  toggleForms();
+}
+function login() {
+  const number = document.getElementById('loginNumber').value;
+  const password = document.getElementById('loginPassword').value;
+  const users = JSON.parse(localStorage.getItem('users'));
+  if (bannedAccounts.includes(number)) {
+    alert('Esta conta está banida');
+    return;
+  }
+  if (users[number] && users[number].password === CryptoJS.SHA256(password).toString()) {
+    currentUser = number;
+    if (!userProfiles[currentUser]) {
+      userProfiles[currentUser] = {
+        displayName: users[currentUser].name,
+        profilePic: 'https://via.placeholder.com/120'
+      };
+    }
+    document.getElementById('userProfilePic').src = userProfiles[currentUser].profilePic;
+    document.getElementById('profileName').value = userProfiles[currentUser].displayName;
+    document.getElementById('authSection').style.display = 'none';
+    document.getElementById('chatSection').style.display = 'block';
+    document.getElementById('userNumber').textContent = `Your number: ${number}`;
+    loadContacts();
+    if ('Notification' in window && Notification.permission === 'default') {
+      showNotificationPrompt();
+    }
+    loginHistory.push({
+      number: number,
+      timestamp: new Date().getTime()
+    });
+    localStorage.setItem('loginHistory', JSON.stringify(loginHistory));
+  } else {
+    alert('Invalid credentials');
+  }
+}
+function toggleForms() {
+  const registerForm = document.getElementById('registerForm');
+  const loginForm = document.getElementById('loginForm');
+  registerForm.style.display = registerForm.style.display === 'none' ? 'block' : 'none';
+  loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+}
+function addContact() {
+  const contactNumber = document.getElementById('contactNumber').value;
+  const users = JSON.parse(localStorage.getItem('users'));
+  if (contactNumber.length !== 6 || !users[contactNumber]) {
+    alert('Invalid number');
+    return;
+  }
+  if (contactNumber === currentUser) {
+    alert('You cannot add yourself as a contact');
+    return;
+  }
+  const user = users[currentUser];
+  if (!user.contacts.includes(contactNumber)) {
+    user.contacts.push(contactNumber);
+    users[contactNumber].contacts.push(currentUser);
+    localStorage.setItem('users', JSON.stringify(users));
+    loadContacts();
+  }
+  document.getElementById('contactNumber').value = '';
+}
+function loadContacts() {
+  const users = JSON.parse(localStorage.getItem('users'));
+  const contactsList = document.getElementById('contactsList');
+  contactsList.innerHTML = '';
+  users[currentUser].contacts.forEach(contact => {
+    const div = document.createElement('div');
+    div.className = 'contact';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = `${users[contact].name} (${contact})`;
+    nameSpan.onclick = () => openChat(contact);
+    const deleteBtn = document.createElement('span');
+    deleteBtn.textContent = '×';
+    deleteBtn.className = 'delete-contact';
+    deleteBtn.onclick = e => {
+      e.stopPropagation();
+      deleteContact(contact);
+    };
+    div.appendChild(nameSpan);
+    div.appendChild(deleteBtn);
+    contactsList.appendChild(div);
+  });
+}
+function openChat(contactNumber) {
+  currentChat = contactNumber;
+  const messages = JSON.parse(localStorage.getItem('messages'));
+  const chatKey = [currentUser, contactNumber].sort().join('-');
+  const messagesDiv = document.getElementById('messages');
+  messagesDiv.innerHTML = '';
+  if (messages[chatKey]) {
+    messages[chatKey].forEach(msg => {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${msg.sender === currentUser ? 'sent' : 'received'}`;
+      messageDiv.textContent = msg.text;
+      messagesDiv.appendChild(messageDiv);
+    });
+  }
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+function deleteContact(contactNumber) {
+  if (confirm('Are you sure you want to delete this contact?')) {
+    const users = JSON.parse(localStorage.getItem('users'));
+    users[currentUser].contacts = users[currentUser].contacts.filter(c => c !== contactNumber);
+    users[contactNumber].contacts = users[contactNumber].contacts.filter(c => c !== currentUser);
+    localStorage.setItem('users', JSON.stringify(users));
+    loadContacts();
+    if (currentChat === contactNumber) {
+      currentChat = null;
+      document.getElementById('messages').innerHTML = '';
+    }
+  }
+}
+function showNotificationPrompt() {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 1000;
+            `;
+  modal.innerHTML = `
+                <h3>Enable notifications</h3>
+                <p>Get notified when you receive new messages, just like WhatsApp!</p>
+                <button onclick="requestNotificationPermission(true)" style="width: auto; margin-right: 10px;">Allow</button>
+                <button onclick="requestNotificationPermission(false)" style="width: auto; background: #gray;">Don't Allow</button>
+            `;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            `;
+  document.body.appendChild(overlay);
+  document.body.appendChild(modal);
+}
+function requestNotificationPermission(granted) {
+  const modal = document.querySelector('div[style*="transform: translate(-50%, -50%)"]');
+  const overlay = document.querySelector('div[style*="background: rgba(0,0,0,0.5)"]');
+  if (modal && overlay) {
+    modal.remove();
+    overlay.remove();
+  }
+  if (granted && 'Notification' in window) {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        new Notification('Notifications enabled!', {
+          body: 'You will now receive notifications for new messages.',
+          icon: 'https://via.placeholder.com/64'
+        });
+      }
+    });
+  }
+}
+function sendMessage() {
+  if (!currentChat) return;
+  const messageInput = document.getElementById('messageInput');
+  const text = messageInput.value.trim();
+  if (!text) return;
+  const messages = JSON.parse(localStorage.getItem('messages'));
+  const chatKey = [currentUser, currentChat].sort().join('-');
+  if (!messages[chatKey]) {
+    messages[chatKey] = [];
+  }
+  messages[chatKey].push({
+    sender: currentUser,
+    text: text,
+    timestamp: new Date().getTime()
+  });
+  localStorage.setItem('messages', JSON.stringify(messages));
+  messageInput.value = '';
+  openChat(currentChat);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const users = JSON.parse(localStorage.getItem('users'));
+    const senderName = users[currentUser].name;
+    if (document.hidden) {
+      new Notification(`New message from ${senderName}`, {
+        body: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+        icon: 'https://via.placeholder.com/64'
+      });
+    }
+  }
+}
+document.getElementById('messageInput').addEventListener('keypress', function (e) {
+  if (e.key === 'Enter') {
+    sendMessage();
+  }
+});
+function showDevAuth() {
+  const password = prompt('Digite a senha para acessar a área do desenvolvedor:');
+  if (password === '67893') {
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('devArea').style.display = 'block';
+    loadDevArea();
+  } else {
+    alert('Senha inválida');
+  }
+}
+function backToMain() {
+  document.querySelector('.container').style.display = 'block';
+  document.getElementById('devArea').style.display = 'none';
+}
+function loadDevArea() {
+  const logsHtml = loginHistory.map(log => `
+        <tr>
+            <td>${log.number}</td>
+            <td>${new Date(log.timestamp).toLocaleString()}</td>
+        </tr>
+    `).join('');
+  document.getElementById('loginLogs').innerHTML = `
+        <table>
+            <tr>
+                <th>Número</th>
+                <th>Data/Hora</th>
+            </tr>
+            ${logsHtml}
+        </table>
+    `;
+  const users = JSON.parse(localStorage.getItem('users'));
+  const accountsHtml = Object.entries(users).map(([number, user]) => `
+        <tr>
+            <td>${number}</td>
+            <td>${user.name}</td>
+            <td>${bannedAccounts.includes(number) ? 'Banida' : 'Ativa'}</td>
+            <td>${verifiedAccounts.includes(number) ? '✓' : ''}</td>
+            <td>
+                <button onclick="verifyAccount('${number}')">Verify</button>
+                <input type="number" placeholder="New follower count" 
+                       onchange="updateFollowerCount('${number}', this.value)">
+            </td>
+        </tr>
+    `).join('');
+  document.getElementById('accountsList').innerHTML = `
+        <table>
+            <tr>
+                <th>Número</th>
+                <th>Nome</th>
+                <th>Status</th>
+                <th>Verificado</th>
+                <th>Ações</th>
+            </tr>
+            ${accountsHtml}
+        </table>
+    `;
+  const postsHtml = posts.map(post => `
+        <tr>
+            <td>${post.userId}</td>
+            <td>${post.text.substring(0, 50)}...</td>
+            <td>${new Date(post.timestamp).toLocaleString()}</td>
+            <td>
+                <button onclick="deletePost('${post.id}')">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+  document.getElementById('accountDetails').innerHTML += `
+        <h4>Posts</h4>
+        <table>
+            <tr>
+                <th>User</th>
+                <th>Content</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+            ${postsHtml}
+        </table>
+    `;
+}
+function deletePost(postId) {
+  if (confirm('Are you sure you want to delete this post?')) {
+    posts = posts.filter(post => post.id !== postId);
+    localStorage.setItem('posts', JSON.stringify(posts));
+    loadDevArea();
+  }
+}
+function viewAccountInfo() {
+  const number = document.getElementById('accountNumberInput').value;
+  const users = JSON.parse(localStorage.getItem('users'));
+  if (users[number]) {
+    const user = users[number];
+    document.getElementById('accountDetails').innerHTML = `
+            <h4>Detalhes da Conta ${number}</h4>
+            <table>
+                <tr><td>Nome:</td><td>${user.name}</td></tr>
+                <tr><td>Contatos:</td><td>${user.contacts.join(', ') || 'Nenhum'}</td></tr>
+                <tr><td>Status:</td><td>${bannedAccounts.includes(number) ? 'Banida' : 'Ativa'}</td></tr>
+            </table>
+        `;
+  } else {
+    alert('Conta não encontrada');
+  }
+}
+function banAccount() {
+  const number = document.getElementById('accountNumberInput').value;
+  const users = JSON.parse(localStorage.getItem('users'));
+  if (users[number]) {
+    if (!bannedAccounts.includes(number)) {
+      bannedAccounts.push(number);
+      localStorage.setItem('bannedAccounts', JSON.stringify(bannedAccounts));
+      alert('Conta banida com sucesso');
+      loadDevArea();
+    } else {
+      alert('Esta conta já está banida');
+    }
+  } else {
+    alert('Conta não encontrada');
+  }
+}
+function openSocialArea() {
+  document.getElementById('chatSection').style.display = 'none';
+  document.getElementById('socialSection').style.display = 'block';
+  loadTimeline();
+}
+function backToChat() {
+  document.getElementById('chatSection').style.display = 'block';
+  document.getElementById('socialSection').style.display = 'none';
+}
+function updateProfile() {
+  const name = document.getElementById('profileName').value;
+  const imageFile = document.getElementById('profilePicInput').files[0];
+  if (!name) {
+    alert('Please enter a display name');
+    return;
+  }
+  if (!userProfiles[currentUser]) {
+    userProfiles[currentUser] = {};
+  }
+  userProfiles[currentUser].displayName = name;
+  if (imageFile) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      userProfiles[currentUser].profilePic = e.target.result;
+      localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
+      document.getElementById('userProfilePic').src = e.target.result;
+      alert('Profile updated successfully');
+    };
+    reader.readAsDataURL(imageFile);
+  } else {
+    localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
+    alert('Profile updated successfully');
+  }
+}
+function createPost() {
+  const text = document.getElementById('postText').value;
+  const imageFile = document.getElementById('postImage').files[0];
+  if (!text && !imageFile) {
+    alert('Please add some content to your post');
+    return;
+  }
+  if (!userProfiles[currentUser]?.displayName) {
+    alert('Please set your profile name first');
+    return;
+  }
+  const post = {
+    id: Date.now(),
+    userId: currentUser,
+    text: text,
+    timestamp: new Date().toISOString(),
+    likes: 0
+  };
+  if (imageFile) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      post.image = e.target.result;
+      finalizePost(post);
+    };
+    reader.readAsDataURL(imageFile);
+  } else {
+    finalizePost(post);
+  }
+}
+function finalizePost(post) {
+  posts.unshift(post);
+  localStorage.setItem('posts', JSON.stringify(posts));
+  document.getElementById('postText').value = '';
+  document.getElementById('postImage').value = '';
+  loadTimeline();
+}
+function loadTimeline() {
+  const timeline = document.getElementById('timeline');
+  timeline.innerHTML = '';
+  posts.forEach(post => {
+    const postElement = document.createElement('div');
+    postElement.className = 'post';
+    const profilePic = userProfiles[post.userId]?.profilePic || 'https://via.placeholder.com/40';
+    const displayName = userProfiles[post.userId]?.displayName || post.userId;
+    const isVerified = verifiedAccounts.includes(post.userId);
+    const isFollowing = followData[post.userId]?.followers?.includes(currentUser) || false;
+    postElement.innerHTML = `
+            <div class="post-header">
+                <img src="${profilePic}" class="profile-pic" onclick="viewProfile('${post.userId}')" style="cursor:pointer">
+                <h4 onclick="viewProfile('${post.userId}')" style="cursor:pointer">
+                    ${displayName}
+                    ${isVerified ? '<span class="verified-badge"></span>' : ''}
+                </h4>
+            </div>
+            <button class="follow-button ${isFollowing ? 'following' : ''}" 
+                    ${isFollowing ? 'disabled' : ''}
+                    ${post.userId === currentUser ? 'style="display:none;"' : ''}
+                    onclick="toggleFollow('${post.userId}')">
+                ${isFollowing ? 'Following' : 'Follow'}
+            </button>
+            <div class="post-content">
+                <p>${post.text}</p>
+                ${post.image ? `<img src="${post.image}" alt="Post image">` : ''}
+            </div>
+            <small>${new Date(post.timestamp).toLocaleString()}</small>
+        `;
+    timeline.appendChild(postElement);
+  });
+}
+function toggleFollow(userId) {
+  if (userId === currentUser) {
+    alert("You cannot follow yourself");
+    return;
+  }
+  if (!followData[userId]) {
+    followData[userId] = {
+      followers: [],
+      following: []
+    };
+  }
+  if (!followData[currentUser]) {
+    followData[currentUser] = {
+      followers: [],
+      following: []
+    };
+  }
+  const isFollowing = followData[userId].followers.includes(currentUser);
+  if (isFollowing) {
+    return;
+  }
+  if (!followData[userId].followers.includes(currentUser)) {
+    followData[userId].followers.push(currentUser);
+  }
+  if (!followData[currentUser].following.includes(userId)) {
+    followData[currentUser].following.push(userId);
+  }
+  localStorage.setItem('followData', JSON.stringify(followData));
+  loadTimeline();
+}
+function verifyAccount(userId) {
+  if (!verifiedAccounts.includes(userId)) {
+    verifiedAccounts.push(userId);
+    localStorage.setItem('verifiedAccounts', JSON.stringify(verifiedAccounts));
+    alert('Account verified successfully');
+    loadDevArea();
+  }
+}
+function updateFollowerCount(userId, count) {
+  if (!followData[userId]) {
+    followData[userId] = {
+      followers: [],
+      following: []
+    };
+  }
+  followData[userId].followers = Array(parseInt(count)).fill().map((_, i) => `synthetic_${i}`);
+  localStorage.setItem('followData', JSON.stringify(followData));
+  alert('Follower count updated successfully');
+  loadDevArea();
+}
+function viewProfile(userId) {
+  const profile = userProfiles[userId] || {};
+  const userPosts = posts.filter(post => post.userId === userId);
+  const followers = followData[userId]?.followers || [];
+  const following = followData[userId]?.following || [];
+  const isFollowing = followers.includes(currentUser);
+  const modal = document.createElement('div');
+  modal.className = 'modal-profile';
+  modal.innerHTML = `
+        <button class="close-button" onclick="closeProfile()">&times;</button>
+        
+        <div class="profile-header">
+            <img src="${profile.profilePic || 'https://via.placeholder.com/150'}" class="profile-pic">
+            
+            <div class="profile-name">
+                ${profile.displayName || userId}
+                ${verifiedAccounts.includes(userId) ? '<span class="verified-badge"></span>' : ''}
+            </div>
+            
+            ${userId !== currentUser ? `
+                <button class="follow-button ${isFollowing ? 'following' : ''}" 
+                        ${isFollowing ? 'disabled' : ''}
+                        onclick="toggleFollow('${userId}')">
+                    ${isFollowing ? 'Following' : 'Follow'}
+                </button>
+            ` : ''}
+            
+            <div class="profile-stats">
+                <div class="stat">
+                    <div class="stat-count">${userPosts.length}</div>
+                    <div class="stat-label">Posts</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-count">${followers.length}</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-count">${following.length}</div>
+                    <div class="stat-label">Following</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="profile-posts">
+            ${userPosts.map(post => `
+                <div class="post">
+                    <p>${post.text}</p>
+                    ${post.image ? `<img src="${post.image}" alt="Post image">` : ''}
+                    <small>${new Date(post.timestamp).toLocaleString()}</small>
+                </div>
+            `).join('')}
+        </div>
+    `;
+  document.body.appendChild(modal);
+}
+function closeProfile() {
+  const modal = document.querySelector('.modal-profile');
+  if (modal) {
+    modal.remove();
+  }
+}
+document.getElementById('devButton').addEventListener('click', showDevAuth);</script>
+</body></html>
